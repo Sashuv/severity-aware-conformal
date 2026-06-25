@@ -29,3 +29,28 @@ def test_tag_severity_uses_judge():
     judge = MockJudge(['{"severity":"dangerous","rationale":"dosing"}'])
     tier, _ = tag_severity("Take 5000 mg.", judge)
     assert tier == "dangerous"
+
+def test_parse_verdict_no_json_block_is_unverifiable():
+    """parse_verdict with no JSON block must return label -1 (unverifiable)."""
+    result = parse_verdict("I think this claim is mostly fine, no JSON here.")
+    assert result[0] == -1
+
+def test_parse_verdict_malformed_json_is_unverifiable():
+    """parse_verdict with broken JSON must return label -1 (unverifiable)."""
+    result = parse_verdict('{"verdict": "entailed"')
+    assert result[0] == -1
+
+def test_parse_verdict_missing_verdict_key_is_unverifiable():
+    """parse_verdict with missing verdict key must return label -1 (unverifiable)."""
+    result = parse_verdict('{"rationale": "no verdict field"}')
+    assert result[0] == -1
+
+def test_parse_verdict_unknown_verdict_is_unverifiable():
+    """parse_verdict with unknown verdict value must return label -1 (unverifiable)."""
+    result = parse_verdict('{"verdict": "partially true", "rationale": "x"}')
+    assert result[0] == -1
+
+def test_parse_severity_malformed_defaults_benign():
+    """parse_severity with no JSON defaults to tier benign."""
+    result = parse_severity("no json at all")
+    assert result[0] == "benign"
