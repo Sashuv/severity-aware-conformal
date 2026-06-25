@@ -1,0 +1,19 @@
+# private docs / briefs — keep local, not public
+*.md
+docs/
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# notebooks
+.ipynb_checkpoints/
+
+# secrets / env
+.env
+
+# cached claim data
+*.jsonl
+*.parquet
