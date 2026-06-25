@@ -17,3 +17,6 @@ venv/
 # cached claim data
 *.jsonl
 *.parquet
+# but always track small test fixtures (needed for the suite on a clean checkout)
+!tests/fixtures/
+!tests/fixtures/*.jsonl
