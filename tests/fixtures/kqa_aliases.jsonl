@@ -1,1 +1,0 @@
-{"qid": "q2", "question": "What are the side effects of metformin?", "reference_answer": "Metformin may cause gastrointestinal distress...", "must_have": ["Metformin can cause nausea and diarrhea.", "Monitor blood sugar levels regularly."], "nice_to_have": ["Vitamin B12 levels should be checked annually."]}

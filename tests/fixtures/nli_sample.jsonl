@@ -1,2 +1,0 @@
-{"premise": "Ibuprofen can raise blood pressure.", "hypothesis": "Ibuprofen lowers blood pressure.", "label": "contradiction"}
-{"premise": "Ibuprofen can raise blood pressure.", "hypothesis": "NSAIDs may elevate BP.", "label": "entailment"}

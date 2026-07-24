@@ -15,8 +15,6 @@ the same.
 | `notebooks/severity_aware_pipeline.ipynb` | The end-to-end driver. Runs the whole study top to bottom on one GPU, one `(dataset, model)` pair at a time, then pools every run for the final analysis. |
 | `notebooks/` (phase1/2/3, score_ablation) | Per-phase notebooks that call into `sac/`. |
 | `results/` | Cached `scored_claims__*.jsonl` and `graded_claims__*.jsonl` for each dataset and model, so the analysis can be rebuilt without re-running generation. |
-| `tests/` | Unit tests for the `sac/` package. |
-| `paper/`, `figures/`, `acl_latex.tex` | Paper draft (tex + markdown) and figure/table generation. |
 
 ## Pipeline
 
@@ -42,7 +40,6 @@ Credentials are resolved at runtime from an environment variable, then a Colab S
 interactive prompt, and are never written to disk.
 
 ```bash
-pip install -r requirements.txt          # core package
+pip install -r requirements.txt           # core package
 pip install -r requirements-notebook.txt  # extras for the notebooks
-pytest                                     # run the test suite
 ```
