@@ -25,6 +25,16 @@ def test_load_nli_pairs():
     assert pairs[0].label == "contradiction"
     assert pairs[1].label == "entailment"
 
+def test_load_nli_from_kqa_csv():
+    # Real K-QA NLI_medical_annotator.csv schema: answer=evidence, claim=hypothesis,
+    # majority_label=verdict.
+    pairs = load_physician_nli(os.path.join(FIX, "nli_sample.csv"))
+    assert len(pairs) == 2
+    assert pairs[0].hypothesis == "Metformin causes nausea"
+    assert "gastrointestinal distress" in pairs[0].premise
+    assert pairs[0].label == "entailment"
+    assert pairs[1].label == "contradiction"
+
 def test_load_kqa_tolerates_secondary_aliases():
     items = load_kqa(os.path.join(FIX, "kqa_aliases.jsonl"))
     assert len(items) == 1

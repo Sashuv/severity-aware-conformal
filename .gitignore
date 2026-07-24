@@ -1,12 +1,10 @@
-# private docs / briefs — keep local, not public
-*.md
-docs/
-
 # python
 __pycache__/
 *.pyc
 .venv/
 venv/
+*.egg-info/
+*.parquet
 
 # notebooks
 .ipynb_checkpoints/
@@ -14,10 +12,22 @@ venv/
 # secrets / env
 .env
 
-# cached claim data
-*.jsonl
-*.parquet
-# but always track small test fixtures (needed for the suite on a clean checkout)
-!tests/fixtures/
-!tests/fixtures/*.jsonl
-*.egg-info/
+# private docs / briefs, keep local, not public
+PROJECT_BRIEF_*.md
+docs/
+.superpowers/
+
+# working caches at repo root (canonical outputs live in results/)
+/claims_phase1.jsonl
+/claims_phase2.jsonl
+/scored_claims.jsonl
+/questions.jsonl
+/questions_w_answers.jsonl
+
+# personal / unrelated / redundant, not for the public repo
+Sample_LOR_UIC_CS_PhD.docx
+sac.zip
+*.drawio
+
+# NOTE: results/*.jsonl, paper/*.md, and tests/fixtures/ ARE tracked
+# (there is deliberately no blanket *.jsonl or *.md ignore).

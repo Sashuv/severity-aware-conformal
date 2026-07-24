@@ -1,0 +1,3 @@
+,Question,llm_x,answer,claim,category_x,majority_label,label_0,label_1,label_2
+0,Tell me about metformin,gpt35,"Metformin may cause gastrointestinal distress such as nausea.",Metformin causes nausea,Must_have,Entailment,Entailment,Entailment,Neutral
+1,Tell me about metformin,gpt35,"Metformin may cause gastrointestinal distress such as nausea.",Metformin cures diabetes permanently,Must_have,Contradiction,Contradiction,Contradiction,Neutral

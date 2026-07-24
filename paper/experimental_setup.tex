@@ -1,0 +1,125 @@
+% Experimental Setup (Section 5) -- ML4H/PMLR Overleaf project.
+% Requires: booktabs (tables), natbib (citations).
+% Contains \label{sec:setup-eval}, referenced by sac.tex (cluster bootstrap).
+% >>> NUMBERS IN TABLE 2 ARE FROM THE CURRENT GRADED FILES; regenerate from the
+%     final run before submission. <<<
+% Bib keys used: manes2024kqa, jeong2024olaph, abacha2017liveqa,
+%   abacha2019medicationqa (last three: VERIFY in references.bib).
+
+\section{Experimental Setup}
+\label{sec:setup-exp}
+
+\subsection{Datasets}
+\label{sec:datasets}
+We evaluate on three English medical question-answering benchmarks. \textbf{K-QA}
+\citep{manes2024kqa} contains real patient questions whose gold answers are
+decomposed by physicians into atomic statements, and ships with a physician-labeled
+natural-language-inference set that we use to validate the factuality labeler.
+\textbf{LiveQA} \citep{abacha2017liveqa} and \textbf{MedicationQA}
+\citep{abacha2019medicationqa} are consumer-health and medication question sets; we
+take them with the reference long-form answers collected in MedLFQA
+\citep{jeong2024olaph}, the same medical long-form QA resource used by
+\citet{cherian2024llm}. Each reference answer supplies the physician-verified
+statements against which generated claims are graded. We pool the three datasets
+within each model (Section~\ref{sec:setup-eval}); per-dataset breakdowns are in
+Table~\ref{tab:data}.
+
+\subsection{Models and confidence scores}
+\label{sec:models}
+The systems under test are two open instruction-tuned models,
+\textbf{Llama-3-8B-Instruct} and \textbf{Mistral-7B-Instruct-v0.3}. For each
+question the model generates a long-form answer, which we decompose into atomic
+claims. The confidence score $s(c)$ is the model's own estimated probability that a
+claim is true: we present the claim back to the generating model with a
+\emph{True}/\emph{False} verification prompt and take the softmax over the two
+answer-token logits,
+\begin{equation}
+s(c) \;=\; \frac{\exp(z_{\textsc{true}})}
+{\exp(z_{\textsc{true}}) + \exp(z_{\textsc{false}})}.
+\label{eq:ptrue}
+\end{equation}
+The score is thus intrinsic to the model under test and requires no external
+resource at deployment. Before calibrating we require the score to be informative,
+gating on $\mathrm{AUROC} \ge 0.7$ against the calibration labels; a score at chance
+would still yield valid risk control but useless retention (Section~\ref{sec:sac}).
+
+\subsection{Labeling: factuality and severity}
+\label{sec:labeling}
+Two labels are attached to each claim during calibration only. The \textbf{factuality
+label} $y(c)$ is produced by a GPT-4o judge acting as a medical fact-checker,
+grounded in the physician-verified reference statements of the corresponding
+question: a claim entailed by the evidence is labeled true ($y=0$), one contradicted
+by it a hallucination ($y=1$), and one neither entailed nor contradicted
+unverifiable. Unverifiable claims are excluded from calibration and evaluation, so
+all reported risks are computed over verifiable claims. We validate this labeler
+against the K-QA physician NLI set and report agreement (accuracy and Cohen's
+$\kappa$) in Table~\ref{tab:data}. % TODO: fill agreement number(s).
+
+The \textbf{severity tier} $t(c)$ is assigned by a separate GPT-4o call under a fixed
+rubric: a claim is \textsc{dangerous} if acting on it while false could cause direct
+patient harm (dosing, contraindications, drug interactions, emergencies) and
+\textsc{benign} otherwise (background facts, mechanisms, epidemiology, definitions).
+% TODO: report severity-tier agreement against a physician-labeled subset (kappa),
+% or soften the "physician-validated" claim in Related Work and Section 4.
+
+\subsection{Calibration, evaluation, and confidence intervals}
+\label{sec:setup-eval}
+We evaluate with repeated calibration/test splitting. Within each pool we draw
+$N_{\text{splits}} = 300$ random splits of verifiable claims; on each split we fit the
+global threshold \eqref{eq:crc-threshold} and the per-tier thresholds
+\eqref{eq:sac-threshold}, then measure, on the held-out claims, the dangerous-tier
+risk, the true-claim retention, and (for reference) the marginal AUROC. The budgets
+are $\alpha_{\textsc{dangerous}} = 0.05$, $\alpha_{\textsc{benign}} = 0.15$, and a
+marginal baseline $\alpha = 0.10$. We report the mean over splits together with the
+per-split \emph{violation rate}, the fraction of splits on which the realized
+dangerous risk \eqref{eq:realized-risk} exceeds $\alpha_{\textsc{dangerous}}$.
+
+Because claims from the same answer are correlated, the sampling unit for uncertainty
+is the question, not the claim. We therefore form 95 percent confidence intervals by
+a \textbf{question-level cluster bootstrap}: we resample whole questions with
+replacement, recompute the fitted thresholds and the resulting tier risks on each
+resample, and take the 2.5 and 97.5 percentiles across resamples. This is the
+finite-sample counterpart to the claim-level exchangeability idealized in
+Proposition~\ref{prop:sac}.
+
+\subsection{Score ablation}
+\label{sec:ablation}
+To show that risk control is a property of the method rather than of any particular
+score, we rerun the full calibration while holding the claims, labels, and tiers
+fixed and swapping only $s(c)$ for: (i) a uniform random score, the noise floor;
+(ii) the entailment probability of a natural-language-inference model; and (iii) the
+length-normalized token log-probability of the claim. Because conformal risk control
+is distribution-free, every score keeps the dangerous tier within budget; only
+retention degrades, and it degrades most for the random score.
+
+\begin{table*}[t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{6pt}
+\begin{tabular}{llrrrr}
+\toprule
+Model & Dataset & Questions & Claims & Verifiable & Dangerous halluc. \\
+\midrule
+\multirow{4}{*}{Llama-3-8B-Instruct}
+  & K-QA          & 201 & 5{,}040  & 2{,}150 & 62 \\
+  & LiveQA        & 100 & 2{,}131  & 953     & 48 \\
+  & MedicationQA  & 425 & 10{,}201 & 4{,}072 & 286 \\
+  & \textit{Pooled} & \textit{726} & \textit{17{,}372} & \textit{7{,}175} & \textit{396} \\
+\midrule
+\multirow{4}{*}{Mistral-7B-Instruct-v0.3}
+  & K-QA          & 201 & 1{,}593 & 864     & 24 \\
+  & LiveQA        & 100 & 901     & 455     & 16 \\
+  & MedicationQA  & 666 & 5{,}357 & 2{,}669 & 106 \\
+  & \textit{Pooled} & \textit{967} & \textit{7{,}851} & \textit{3{,}988} & \textit{146} \\
+\bottomrule
+\end{tabular}
+\caption{Dataset statistics per model. \emph{Verifiable} counts claims labeled true
+or hallucination (unverifiable claims are excluded from calibration and evaluation);
+\emph{Dangerous halluc.} counts verifiable dangerous-tier hallucinations, the events
+that determine statistical power. MedicationQA grading for Llama-3-8B was capped at
+425 of 666 questions by a judge-API quota limit; because each model is calibrated and
+evaluated independently, matched question counts across models are not required, and
+the 396 pooled dangerous events for Llama already exceed the count needed for stable
+estimates. Regenerate from the final run before submission.}
+\label{tab:data}
+\end{table*}

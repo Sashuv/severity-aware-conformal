@@ -62,3 +62,8 @@ def tier_risk_marginal(claims, kept, tier):
     kept = np.asarray(kept); idx = np.array([c.tier == tier for c in claims])
     labels = np.array([c.label for c in claims]); nt = idx.sum()
     return np.sum(kept & idx & (labels == 1)) / nt if nt else 0.0
+
+def tier_retention(claims, kept, tier):
+    kept = np.asarray(kept); idx = np.array([c.tier == tier for c in claims])
+    labels = np.array([c.label for c in claims]); nt = np.sum(idx & (labels == 0))
+    return np.sum(kept & idx & (labels == 0)) / nt if nt else 0.0

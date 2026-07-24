@@ -9,8 +9,8 @@ Answer: {answer}
 
 Atomic claims:"""
 
-def build_decompose_prompt(question, answer):
-    return _PROMPT.format(question=question, answer=answer)
+def build_decompose_prompt(question, answer, template=_PROMPT):
+    return template.format(question=question, answer=answer)
 
 def parse_claims(raw):
     claims = []
@@ -23,6 +23,6 @@ def parse_claims(raw):
             claims.append(line)
     return claims
 
-def decompose(question, answer, backend):
-    raw = backend.generate(build_decompose_prompt(question, answer))
+def decompose(question, answer, backend, prompt_template=_PROMPT):
+    raw = backend.generate(build_decompose_prompt(question, answer, prompt_template))
     return parse_claims(raw)

@@ -1,0 +1,82 @@
+% Introduction (Section 1) -- paste into your ML4H/PMLR Overleaf project.
+% Requires natbib (the PMLR/JMLR style loads it) and amsmath for \alpha.
+% Bib keys used: angelopoulos2024crc, min2023factscore, mohri2024conformal, cherian2024llm.
+
+\section{Introduction}
+\label{sec:intro}
+
+Large language models (LLMs) are increasingly being used to support patients and
+healthcare professionals by answering medical questions and assisting with
+health-related information. Yet they state false claims as confidently as true
+ones. A model might report that a drug should be taken at ``5000 mg per day'' just
+as fluently as it reports that ``metformin treats type 2 diabetes,'' with no signal
+that one of them is wrong. In most applications, factual errors are often minor and
+carry limited consequences. In medicine, a wrong dose or a missed contraindication
+can cause real harm. For these systems to be trusted in the clinic, it is not
+enough to be usually right: we need a reliable bound on how often, and how
+dangerously, they are wrong.
+
+Raw confidence estimates from LLMs do not provide such a guarantee. Both softmax
+probabilities and self-reported confidence scores are often poorly calibrated,
+making them unreliable indicators of the true probability of error. Conformal
+prediction offers a way to obtain this guarantee regardless of how well-calibrated
+the underlying confidence score is. Given a held-out calibration set of examples
+with known correctness, it converts any confidence score into a decision threshold
+with a distribution-free guarantee. On new data, the error rate among kept
+predictions stays below a target level $\alpha$ that the user chooses in advance.
+
+Conformal risk control (CRC) extends this idea from prediction sets to any bounded
+error measure that decreases as the threshold tightens \citep{angelopoulos2024crc},
+such as the fraction of kept claims that are hallucinations; the target level
+$\alpha$ then acts as an error budget the filter must respect. A medical answer is
+rarely entirely true or entirely false, so it is first decomposed into atomic
+claims, and a keep-or-flag decision is made for each claim on its own
+\citep{min2023factscore}. Keeping only the claims confident enough to satisfy the
+budget yields a conformal factuality guarantee \citep{mohri2024conformal}, and this
+has recently been demonstrated on medical long-form question answering
+\citep{cherian2024llm}. We take claim-level medical conformal factuality as our
+starting point; it is the basis we build on, not our contribution.
+
+Existing conformal factuality guarantees overlook a basic asymmetry: not all
+hallucinations are equally harmful. A wrong dose or a missed contraindication is
+dangerous, whereas an incorrect background fact, such as the year a drug was first
+described, is benign. A single budget, however, treats every hallucination as an
+identical unit of error. Because the guarantee constrains only the combined rate, a
+filter can be highly accurate on benign claims and still have a very high error rate
+on dangerous claims, as long as the benign claims, which are far more numerous, pull
+the average back within budget. This is not hypothetical. Across two open models and
+three medical QA benchmarks, a single global CRC threshold tuned to a 10 percent
+marginal budget leaves the dangerous-claim hallucination rate between 0.068 and
+0.094, well above a 0.05 dangerous target, on every model and dataset pair we test.
+
+We address this by making the guarantee severity-aware. Rather than controlling one
+harm-blind error rate, we partition claims into the two severity tiers above and
+assign each tier its own conformal budget. Because the calibration procedure
+enforces the budgets separately, holding the dangerous tier to a stricter target
+than the benign tier directly forces a higher confidence threshold on dangerous
+claims, rather than relying on severity to come out in the wash of an aggregate
+rate. This reallocates strictness rather than raising it everywhere: the looser
+benign budget lets the system surface more true benign information, even as the
+stricter dangerous budget catches more dangerous hallucinations.
+
+On the same two models and three datasets, severity-aware CRC brings the dangerous
+hallucination rate to 0.049 or below, back within budget, at a modest cost in the
+fraction of true claims retained. We report 95 percent confidence intervals from a
+cluster bootstrap that resamples whole questions, since claims drawn from the same
+answer are correlated. A score ablation further shows that the safety guarantee is a
+property of the method rather than of any particular confidence score: even a random
+score holds the dangerous tier within budget, and only the retention of true claims
+suffers. Our contributions are:
+
+\begin{itemize}
+  \item We formulate \textbf{severity-aware (tiered) conformal risk control} for
+  harm-stratified, claim-level factuality in medicine, separating the keep-or-flag
+  confidence score from the per-tier harm budget.
+  \item Across \textbf{two models and three medical QA datasets}, we show that a
+  single global budget systematically exceeds the dangerous-claim target (0.068 to
+  0.094) while severity-aware control restores it (0.049 or below), with
+  cluster-bootstrap confidence intervals and per-split violation rates.
+  \item We show that validity is \textbf{method-borne} through a score ablation, and
+  that severity-awareness reallocates rather than uniformly increases strictness,
+  keeping more true benign claims while catching more dangerous hallucinations.
+\end{itemize}

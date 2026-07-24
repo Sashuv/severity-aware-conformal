@@ -1,0 +1,54 @@
+% Related Work section — paste into your ACL/EMNLP Overleaf project.
+% Requires natbib (the acl style loads it). Bib entries are in references.bib.
+% Uses \citep (parenthetical) and \citet (textual).
+
+\section{Related Work}
+\label{sec:related}
+
+\paragraph{Conformal prediction and risk control for LLMs.}
+Conformal prediction calibrates a decision threshold on labeled data to obtain
+distribution-free, finite-sample guarantees
+\citep{vovk2005algorithmic,angelopoulos2023gentle}. Conformal risk control
+(CRC) generalizes the guarantee from coverage to any bounded loss that
+decreases as the threshold tightens \citep{angelopoulos2024crc}. Applied to
+language models, this underlies conformal language modeling
+\citep{quach2024conformal}, conformal factuality, which removes low-confidence
+sub-claims to bound the retained-error rate \citep{mohri2024conformal}, and
+conformal abstention, which declines to answer when uncertainty is high
+\citep{abbasiyadkori2024conformal}. A recent line examines how the realized
+risk of CRC varies across calibration splits and uses randomization and
+bootstrapping to characterize it beyond its mean \citep{pang2025bootstrap}; we
+adopt a related cluster bootstrap to report confidence intervals and per-split
+violation rates. All of these methods control a single, harm-blind error rate.
+
+\paragraph{Claim-level and medical factuality.}
+Verifying long-form answers one atomic claim at a time follows the
+decompose-then-verify approach of FactScore \citep{min2023factscore} and SAFE
+\citep{wei2024safe}; MedScore adapts the decomposition step to clinical text,
+where general-purpose decomposers underperform \citep{huang2025medscore}. Most
+relevant to us, \citet{cherian2024llm} bring claim-level conformal factuality to
+medical long-form QA with conditional, topic-adaptive guarantees. We build on
+this claim-level medical conformal factuality; what we change is the quantity
+being controlled, not the decomposition or scoring pipeline. For claim-level
+labels we use K-QA \citep{manes2024kqa} together with the LiveQA and MedicationQA
+subsets of MedLFQA.
+
+\paragraph{Harm-aware factuality and safety.}
+A growing body of work observes that not all claims matter equally.
+Importance-sensitive metrics weight factual errors by their relevance to the
+query \citep{wanner2025importance}, but they are evaluation measures and carry
+no statistical guarantee. On the guarantee side, CARE \citep{bedi2026care} is a
+conformal safety layer for medical summarization that controls separate budgets
+for hallucination and omission at the sentence level; its losses are unweighted,
+and it explicitly leaves harm-weighted objectives and type-specific risk budgets
+to future work, citing the lack of validated severity weights. Our work provides
+exactly that missing piece: a separate conformal budget per clinical severity
+tier, with the tiers validated against physician labels, at the claim level for
+medical question answering.
+
+Severity-conditional control also relates to Mondrian and group-conditional
+conformal prediction \citep{vovk2012conditional} and to weighted CRC, which
+reweights within a single budget \citep{xu2024conformal}. To our knowledge, we
+are the first to assign each clinical severity tier its own conformal budget for
+claim-level medical factuality, turning the harm-blind guarantee of prior
+conformal factuality into a harm-stratified one.

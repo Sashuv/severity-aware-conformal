@@ -1,0 +1,68 @@
+% Preliminaries (Section 3) -- paste into your ML4H/PMLR Overleaf project.
+% Requires: amsmath, amssymb (standard in the PMLR/JMLR style).
+% Notation is fixed here and reused in Section 4 (SAC), Experimental Setup, and Results.
+% Bib keys used: angelopoulos2024crc, mohri2024conformal, min2023factscore.
+
+\section{Preliminaries}
+\label{sec:prelim}
+
+\subsection{Problem setup and notation}
+\label{sec:setup}
+We work at the level of atomic claims. A model answer to a medical question is
+decomposed into claims $c_1, \dots, c_m$ following the decompose-then-verify
+recipe \citep{min2023factscore, mohri2024conformal}. Each claim $c$ carries three
+quantities: a confidence score $s(c) \in [0,1]$, an interpretation of the model's
+estimated probability that the claim is true; a binary label $y(c) \in \{0, 1\}$,
+where $y=1$ marks a hallucination and $y=0$ a faithful claim; and a severity tier
+$t(c) \in \mathcal{T} = \{\textsc{benign}, \textsc{dangerous}\}$ assigned by a
+clinical grader. The label is used only during calibration; at deployment a claim
+is filtered using its score and tier alone.
+
+The filter is a single threshold rule. Given a threshold $\lambda \in [0,1]$, we
+\emph{keep} claim $c$ when $s(c) \ge \lambda$ and \emph{flag} it otherwise.
+Because we cannot in general verify a flagged claim, the object we control is the
+rate at which kept claims are hallucinations. For a claim $c$ we define the
+per-claim loss
+\begin{equation}
+\ell(c; \lambda) \;=\; \mathbf{1}\!\left[s(c) \ge \lambda\right]\,
+\mathbf{1}\!\left[y(c) = 1\right],
+\label{eq:loss}
+\end{equation}
+the indicator that a hallucination survives the filter. This loss is bounded in
+$[0,1]$ and is monotone non-increasing in $\lambda$: raising the threshold only
+removes claims, so it can only turn a kept hallucination into a flagged one, never
+the reverse. These two properties are exactly what conformal risk control requires.
+
+\subsection{Conformal risk control}
+\label{sec:crc}
+Let $\{c_i\}_{i=1}^{n}$ be a calibration set of claims with known labels. The
+empirical risk of the threshold $\lambda$ is the mean loss
+\begin{equation}
+\begin{aligned}
+\widehat{R}_n(\lambda) &\;=\; \frac{1}{n} \sum_{i=1}^{n} \ell(c_i; \lambda)\\
+&\;=\; \frac{1}{n} \sum_{i=1}^{n}
+\mathbf{1}\!\left[s(c_i) \ge \lambda\right]\,\mathbf{1}\!\left[y(c_i) = 1\right],
+\end{aligned}
+\label{eq:emp-risk}
+\end{equation}
+that is, the fraction of \emph{all} calibration claims that are both kept and
+hallucinated. Conformal risk control \citep{angelopoulos2024crc} selects the
+smallest threshold whose finite-sample-corrected risk meets a target budget
+$\alpha$,
+\begin{equation}
+\widehat{\lambda} \;=\; \inf\left\{ \lambda :\;
+\frac{n}{n+1}\,\widehat{R}_n(\lambda) + \frac{B}{n+1} \;\le\; \alpha \right\},
+\label{eq:crc-threshold}
+\end{equation}
+where $B = 1$ upper-bounds the loss in \eqref{eq:loss}. Choosing the smallest such
+$\lambda$ is deliberate: it is the least aggressive filter that still meets the
+budget, so it keeps as many claims as possible. Under exchangeability of the
+calibration claims and a fresh test claim $c_{n+1}$, this threshold satisfies the
+distribution-free guarantee
+\begin{equation}
+\mathbb{E}\!\left[\ell\big(c_{n+1}; \widehat{\lambda}\big)\right] \;\le\; \alpha,
+\label{eq:crc-guarantee}
+\end{equation}
+so the expected rate at which a hallucination is kept is at most $\alpha$. This is
+the harm-blind guarantee we take as our baseline: a single $\lambda$ and a single
+$\alpha$ applied to every claim regardless of tier.
